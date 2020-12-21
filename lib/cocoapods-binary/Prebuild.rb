@@ -1,6 +1,7 @@
 require_relative 'rome/build_framework'
 require_relative 'helper/passer'
 require_relative 'helper/target_checker'
+require_relative 'tool/tool'
 
 
 # patch prebuild ability
@@ -59,7 +60,7 @@ module Pod
         def install_when_cache_hit!
             # just print log
             self.sandbox.exsited_framework_target_names.each do |name|
-                UI.puts "Using #{name}"
+                UI.puts "Using #{name}".magenta
             end
         end
     
@@ -113,11 +114,11 @@ module Pod
 
             
             # build!
-            Pod::UI.puts "Prebuild frameworks (total #{targets.count})"
+            Pod::UI.puts "Prebuild frameworks (total #{targets.count})".yellow
             Pod::Prebuild.remove_build_dir(sandbox_path)
             targets.each do |target|
                 if !target.should_build?
-                    UI.puts "Prebuilding #{target.label}"
+                    UI.puts "Prebuilding #{target.label}".green
                     next
                 end
 
@@ -147,23 +148,45 @@ module Pod
                         object.real_file_path = framework_path + File.basename(path)
                         object.target_file_path = path.gsub('${PODS_ROOT}', standard_sandbox_path.to_s) if path.start_with? '${PODS_ROOT}'
                         object.target_file_path = path.gsub("${PODS_CONFIGURATION_BUILD_DIR}", standard_sandbox_path.to_s) if path.start_with? "${PODS_CONFIGURATION_BUILD_DIR}"
+                        
+                        if !object.real_file_path.exist? && object.real_file_path.extname == '.xib'
+                            object.real_file_path = object.real_file_path.sub_ext('.nib')
+                            object.target_file_path = Pathname(object.target_file_path).sub_ext('.nib').to_path
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.storyboard'
+                            object.real_file_path = object.real_file_path.sub_ext('.storyboardc')
+                            object.target_file_path = Pathname(object.target_file_path).sub_ext('.storyboardc').to_path
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.ttf'
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.aiff'
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.sh'
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.plist'
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.png'
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/build/Release-iphonesimulator/")).exist?
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/build/Release-iphonesimulator/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")).exist?
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
+                        end
                         object
                     end
                     Prebuild::Passer.resources_to_copy_for_static_framework[target.name] = path_objects
                 end
-
             end            
-            Pod::Prebuild.remove_build_dir(sandbox_path)
+            #Pod::Prebuild.remove_build_dir(sandbox_path)
 
 
             # copy vendored libraries and frameworks
             targets.each do |target|
+                UI.puts "Copying framework #{target.label} to Pods directory".yellow
                 root_path = self.sandbox.pod_dir(target.name)
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
-                
+
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files
-                if not target.should_build? 
+                if not target.should_build?
                     Prebuild::Passer.target_names_to_skip_integration_framework << target.name
                     FileUtils.cp_r(root_path, target_folder, :remove_destination => true)
                     next
@@ -191,7 +214,7 @@ module Pod
             # Remove useless files
             # remove useless pods
             all_needed_names = self.pod_targets.map(&:name).uniq
-            useless_target_names = sandbox.exsited_framework_target_names.reject do |name| 
+            useless_target_names = sandbox.exsited_framework_target_names.reject do |name|
                 all_needed_names.include? name
             end
             useless_target_names.each do |name|

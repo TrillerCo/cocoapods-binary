@@ -1,5 +1,6 @@
 require 'fourflusher'
 require 'xcpretty'
+require_relative '../tool/tool'
 
 CONFIGURATION = "Release"
 PLATFORMS = { 'iphonesimulator' => 'iOS',
@@ -24,7 +25,7 @@ def build_for_iosish_platform(sandbox,
   deployment_target = target.platform.deployment_target.to_s
   
   target_label = target.label # name with platform if it's used in multiple platforms
-  Pod::UI.puts "Prebuilding #{target_label}..."
+  Pod::UI.puts "Prebuilding #{target_label}...".green
   
   other_options = []
   # bitcode enabled
@@ -110,26 +111,13 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   platform = PLATFORMS[sdk]
   args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
   args += other_options
-  log = `xcodebuild #{args.join(" ")} 2>&1`
+  puts "xcodebuild #{args.join(" ")}".cyan
+  log = `set -o pipefail && xcodebuild #{args.join(" ")} | xcpretty`
   exit_code = $?.exitstatus  # Process::Status
   is_succeed = (exit_code == 0)
 
-  if !is_succeed
-    begin
-        if log.include?('** BUILD FAILED **')
-            # use xcpretty to print build log
-            # 64 represent command invalid. http://www.manpagez.com/man/3/sysexits/
-            printer = XCPretty::Printer.new({:formatter => XCPretty::Simple, :colorize => 'auto'})
-            log.each_line do |line|
-              printer.pretty_print(line)
-            end
-        else
-            raise "shouldn't be handle by xcpretty"
-        end
-    rescue
-        puts log.red
-    end
-  end
+  puts log
+  
   [is_succeed, log]
 end
 
