@@ -43,7 +43,7 @@ module Pod
                     target = Pathname.new(target)
                     target.parent.mkpath unless target.parent.exist?
                     relative_source = source.relative_path_from(target.parent)
-                    FileUtils.ln_sf(relative_source, target)
+                    FileUtils.cp_r(source, target)
                 end
                 def mirror_with_symlink(source, basefolder, target_folder)
                     target = target_folder + source.relative_path_from(basefolder)

@@ -5,7 +5,7 @@ require 'cocoapods-binary/gem_version.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-binary'
-  spec.version       = CocoapodsBinary::VERSION
+  spec.version       = '1.0.0'
   spec.authors       = ['leavez']
   spec.email         = ['gaojiji@gmail.com']
   spec.description   = %q{integrate pods in form of prebuilt frameworks conveniently, reducing compile time}

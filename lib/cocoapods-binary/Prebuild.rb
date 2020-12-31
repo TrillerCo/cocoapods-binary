@@ -118,7 +118,7 @@ module Pod
             Pod::Prebuild.remove_build_dir(sandbox_path)
             targets.each do |target|
                 if !target.should_build?
-                    UI.puts "Prebuilding #{target.label}".green
+                    UI.puts "Skipping #{target.label}. Nothing to build.".green
                     next
                 end
 
@@ -180,9 +180,9 @@ module Pod
 
             # copy vendored libraries and frameworks
             targets.each do |target|
-                UI.puts "Copying framework #{target.label} to Pods directory".yellow
                 root_path = self.sandbox.pod_dir(target.name)
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
+                UI.puts "Copying framework #{target.label} to #{target_folder} directory".yellow
 
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files
@@ -196,6 +196,7 @@ module Pod
                     file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
                     lib_paths = file_accessor.vendored_frameworks || []
                     lib_paths += file_accessor.vendored_libraries
+                    
                     # @TODO dSYM files
                     lib_paths.each do |lib_path|
                         relative = lib_path.relative_path_from(root_path)
