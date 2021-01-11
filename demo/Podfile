@@ -1,3 +1,6 @@
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/TrillerCo/private-pod-trunk.git' 
+
 platform :ios, '9.0'
 plugin 'cocoapods-binary'
 
@@ -7,6 +10,50 @@ all_binary!
 
 target 'demo' do
 
-  pod 'Masonry'
+  pod 'SqualkSDK', '~> 0.1.36', :inhibit_warnings => true
 
+end
+
+inhibit_all_warnings!
+
+# deletes UIWebView symbols from AFNetworking
+pre_install do |installer|
+  dir_af = File.join(installer.sandbox.pod_dir('AFNetworking'), 'UIKit+AFNetworking')
+  if Dir.exists?(dir_af)
+    Dir.foreach(dir_af) {| x|
+    real_path = File.join(dir_af, x)
+    if (!File.directory?(real_path) && File.exists?(real_path))
+      if((x.start_with?('UIWebView') || x == 'UIKit+AFNetworking.h'))
+        File.delete(real_path)
+      end
+    end
+  }
+  end
+
+  squalk_classes = 'Pods/SqualkSDK/SqualkSDK/Classes'
+  if Dir.exists?(squalk_classes)
+    FileUtils.rm_rf(squalk_classes)
+    FileUtils.cp_r('Pods/_Prebuild/SqualkSDK/SqualkSDK/Classes', squalk_classes)
+  end
+
+end
+
+# After every installation, copy the license and settings plists over to our project
+post_install do |installer|
+  require 'fileutils'
+
+  FileUtils.mkdir_p 'Pods/SqualkSDK/SqualkSDK/Classes/Storyboards/'
+  puts %x{cp -r 'Pods/_Prebuild/GeneratedFrameworks/SqualkSDK/SqualkSDK.framework/' 'Pods/SqualkSDK/SqualkSDK/Classes/Storyboards'}
+
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.shell_script_build_phases.each do |phase| 
+        script = phase.shell_script
+        if script.include? "-copy-dsyms.sh\""
+          target.build_phases.delete(phase)
+        end
+      end
+
+    end
+  end
 end

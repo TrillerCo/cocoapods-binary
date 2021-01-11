@@ -111,6 +111,10 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   platform = PLATFORMS[sdk]
   args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
   args += other_options
+  if sdk == "iphoneos"
+      args += ["-destination generic/platform=iOS"]
+  end
+  
   puts "xcodebuild #{args.join(" ")}".cyan
   log = `set -o pipefail && xcodebuild #{args.join(" ")} | xcpretty`
   exit_code = $?.exitstatus  # Process::Status
