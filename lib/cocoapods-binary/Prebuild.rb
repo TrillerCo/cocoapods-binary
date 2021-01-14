@@ -47,11 +47,11 @@ module Pod
             deleted = changes.deleted 
             
             exsited_framework_pod_names = sandbox.exsited_framework_pod_names
-            missing = unchanged.select do |pod_name|
-                not exsited_framework_pod_names.include?(pod_name)
-            end
+            #missing = unchanged.select do |pod_name|
+            #    not exsited_framework_pod_names.include?(pod_name)
+            #end
 
-            needed = (added + changed + deleted + missing)
+            needed = (added + changed + deleted)
             return needed.empty?
         end
         
