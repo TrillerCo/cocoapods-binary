@@ -88,7 +88,9 @@ module Pod
                     path_objects = hash[name]
                     if path_objects != nil
                         path_objects.each do |object|
-                            make_link(object.real_file_path, object.target_file_path)
+                            if File.file?(object.real_file_path)
+                                make_link(object.real_file_path, object.target_file_path)
+                            end
                         end
                     end
                 end # of for each 
