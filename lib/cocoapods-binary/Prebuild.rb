@@ -50,7 +50,16 @@ module Pod
             #missing = unchanged.select do |pod_name|
             #    not exsited_framework_pod_names.include?(pod_name)
             #end
-
+            
+            UI.puts "".magenta
+            UI.puts "Frameworks summary:".magenta
+            UI.puts "".magenta
+            UI.puts "Added: #{added}".cyan
+            UI.puts "Changed: #{changed}".cyan
+            UI.puts "Unchanged: #{unchanged}".cyan
+            UI.puts "Deleted: #{deleted}".cyan
+            UI.puts "".magenta
+            
             needed = (added + changed + deleted)
             return needed.empty?
         end
