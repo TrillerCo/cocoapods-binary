@@ -191,7 +191,7 @@ module Pod
             targets.each do |target|
                 root_path = self.sandbox.pod_dir(target.name)
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
-                UI.puts "Copying framework #{target.label} to #{target_folder} directory".yellow
+                UI.puts "Copying framework #{target.label} to #{target_folder} directory #{target_folder.to_s}".yellow
 
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files

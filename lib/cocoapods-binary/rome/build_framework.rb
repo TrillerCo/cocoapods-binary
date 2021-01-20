@@ -101,6 +101,8 @@ def build_for_iosish_platform(sandbox,
   end
 
   # output
+  puts "Cleaning #{output_path.to_s}".yellow
+  FileUtils.rm_rf(output_path)
   output_path.mkpath unless output_path.exist?
   FileUtils.mv device_framework_path, output_path, :force => true
 
