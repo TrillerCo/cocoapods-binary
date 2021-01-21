@@ -1,8 +1,6 @@
 
 <p align="center"><img src="/test/logo.png" width="622"></p>
 
-[![Build Status](https://travis-ci.org/leavez/cocoapods-binary.svg?branch=master)](https://travis-ci.org/leavez/cocoapods-binary)
-
 A CocoaPods plugin to integrate pods in form of prebuilt frameworks, not source code, by adding **just one flag** in podfile. Speed up compiling dramatically.
 
 Good news: Introduction on cocoapods offical site: [Pre-compiling dependencies](http://guides.cocoapods.org/plugins/pre-compiling-dependencies.html) ( NOTE: This plugin is a community work, not official.)
@@ -63,16 +61,29 @@ If your `Pods` folder is excluded from git, you may add `keep_source_code_for_pr
 
 If bitcode is needed, add a `enable_bitcode_for_prebuilt_frameworks!` before all targets in Podfile
 
+## Questions
 
-#### Known Issues
+1. Why is the initial precompilation a lengthy task?
 
-- doesn't support watchos now
-- ~~dSYM files is missing for dynamic frameworks using this plugin. Workaround: Don't use this plugin for a release build. Add a if condition with ENV around `plugin 'cocoapods-binary'`. [(detail)](https://github.com/leavez/cocoapods-binary/issues/44)~~ (fix in 0.4.2)
+The gem builds each pod for all architectures (simulator and devices seperately) and with >100 pods unfortauntely this can take a while. Additionally xcodebuild cli is run serially and synchronously, rather than in parralel if you use Xcode GUI build system. 
 
-## License
+2. How do I reduce the build time when I clone a project?
 
-MIT
+Our daily develop CI job updates a [Triller-Pods](https://github.com/TrillerCo/Triller-Pods) repo that you can fetch using `git submodule update --init --recursive` 
 
-Appreciate a 🌟 if you like it. 
+3. How can I rebuild a pod?
 
+A pod is built if your `Podfile.lock` in the root project directory is out of sync with the `Manifest.lock` file in `Pods` -> `_Prebuild` . You can manually remove a dependancy in the `Manifest.lock` file or reduce the version used and it should force an update.
 
+4. Can I use a mix of precompiled and regular pods?
+
+Unfortunately not.
+
+5. Can I disable precompiled pods?
+
+Sure, you can comment out the following two lines in your Podfile:
+
+```
+all_binary!
+keep_source_code_for_prebuilt_frameworks!
+```
