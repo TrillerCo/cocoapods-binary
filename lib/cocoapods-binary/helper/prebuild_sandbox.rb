@@ -62,7 +62,7 @@ module Pod
         def exsited_framework_name_pairs
             return [] unless generate_framework_path.exist?
             generate_framework_path.children().map do |framework_path|
-                if framework_path.directory? && (not framework_path.children.empty?)
+                if framework_path.directory? #&& (not framework_path.children.empty?)
                     [framework_path.basename.to_s,  pod_name_for_target_folder(framework_path)]
                 else
                     nil

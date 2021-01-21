@@ -47,9 +47,9 @@ module Pod
             deleted = changes.deleted 
             
             exsited_framework_pod_names = sandbox.exsited_framework_pod_names
-            #missing = unchanged.select do |pod_name|
-            #    not exsited_framework_pod_names.include?(pod_name)
-            #end
+            missing = unchanged.select do |pod_name|
+                not exsited_framework_pod_names.include?(pod_name)
+            end
             
             UI.puts "".magenta
             UI.puts "Frameworks summary:".magenta
@@ -58,9 +58,10 @@ module Pod
             UI.puts "Changed: #{changed}".cyan
             UI.puts "Unchanged: #{unchanged}".cyan
             UI.puts "Deleted: #{deleted}".cyan
+            UI.puts "Missing: #{missing}".cyan
             UI.puts "".magenta
             
-            needed = (added + changed + deleted)
+            needed = (added + changed + deleted + missing)
             return needed.empty?
         end
         
@@ -89,8 +90,8 @@ module Pod
                 added = changes.added
                 changed = changes.changed 
                 unchanged = changes.unchanged
-                deleted = changes.deleted 
-    
+                deleted = changes.deleted
+                
                 existed_framework_folder.mkdir unless existed_framework_folder.exist?
                 exsited_framework_pod_names = sandbox.exsited_framework_pod_names
     
@@ -98,8 +99,7 @@ module Pod
                 missing = unchanged.select do |pod_name|
                     not exsited_framework_pod_names.include?(pod_name)
                 end
-
-
+                
                 root_names_to_update = (added + changed + missing)
 
                 # transform names to targets
@@ -130,6 +130,9 @@ module Pod
                     UI.puts "Skipping #{target.label}. Nothing to build.".green
                     next
                 end
+                
+                dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
+                
 
                 output_path = sandbox.framework_folder_path_for_target_name(target.name)
                 output_path.mkpath unless output_path.exist?
@@ -192,7 +195,11 @@ module Pod
                 root_path = self.sandbox.pod_dir(target.name)
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
                 UI.puts "Copying framework #{target.label} to #{target_folder} directory #{target_folder.to_s}".yellow
-
+                
+                if target_folder.exist?
+                   next
+                end
+                
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files
                 if not target.should_build?
@@ -231,7 +238,13 @@ module Pod
                 path = sandbox.framework_folder_path_for_target_name(name)
                 path.rmtree if path.exist?
             end
-
+            
+            # Issue for pods that are used as development pods
+            all_needed_names.each do |name|
+                output_path = sandbox.framework_folder_path_for_target_name(name)
+                output_path.mkpath unless output_path.exist?
+            end
+            
             if not Podfile::DSL.dont_remove_source_code 
                 # only keep manifest.lock and framework folder in _Prebuild
                 to_remain_files = ["Manifest.lock", File.basename(existed_framework_folder)]
