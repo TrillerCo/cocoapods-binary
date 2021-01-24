@@ -131,9 +131,6 @@ module Pod
                     next
                 end
                 
-                dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
-                
-
                 output_path = sandbox.framework_folder_path_for_target_name(target.name)
                 output_path.mkpath unless output_path.exist?
                 Pod::Prebuild.build(sandbox_path, target, output_path, bitcode_enabled,  Podfile::DSL.custom_build_options,  Podfile::DSL.custom_build_options_simulator)
@@ -196,7 +193,25 @@ module Pod
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
                 UI.puts "Copying framework #{target.label} to #{target_folder} directory #{target_folder.to_s}".yellow
                 
-                if target_folder.exist?
+                ### Development podspecs don't have an output framework but may need their dependancies build
+                shouldBuildParent = true
+                shouldBuildChildren = true
+                
+                ### Look for a development pod folder
+                if target_folder.exist? && target_folder.children.empty?
+                    shouldBuildParent = false
+                end
+                
+                ### Check each of the dependancy targets have a pod folder
+                dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
+                dependency_targets.each do |target|
+                    dependancy_target_folder = sandbox.framework_folder_path_for_target_name(target.name)
+                    if dependancy_target_folder.exist?
+                        shouldBuildChildren = false
+                    end
+                end
+                
+                if !shouldBuildParent && !shouldBuildChildren
                    next
                 end
                 
