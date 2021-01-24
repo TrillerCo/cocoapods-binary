@@ -174,8 +174,8 @@ module Pod
                             object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
                         elsif !object.real_file_path.exist? && object.real_file_path.extname == '.png'
                             object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
-                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/build/Release-iphonesimulator/")).exist?
-                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/build/Release-iphonesimulator/")
+                        elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/build/Release-iphoneos/")).exist?
+                            object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/build/Release-iphoneos/")
                         elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")).exist?
                             object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
                         end
