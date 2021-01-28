@@ -128,7 +128,6 @@ module Pod
             targets.each do |target|
                 if !target.should_build?
                     UI.puts "Skipping #{target.label}. Nothing to build.".green
-                    FileUtils.rm_rf(sandbox.framework_folder_path_for_target_name(target.name))
                     next
                 end
                 
@@ -192,7 +191,6 @@ module Pod
             targets.each do |target|
                 root_path = self.sandbox.pod_dir(target.name)
                 target_folder = sandbox.framework_folder_path_for_target_name(target.name)
-                UI.puts "Copying framework #{target.label} from #{root_path} directory #{target_folder.to_s}".yellow
                 
                 ### Development podspecs don't have an output framework but may need their dependancies build
                 shouldBuildParent = true
@@ -219,11 +217,17 @@ module Pod
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files
                 if not target.should_build?
+                    root_path = self.sandbox.pod_dir(target.product_basename)
+                    target_folder = sandbox.generate_framework_path
+                    target_folder.mkpath unless target_folder.exist?
+                    
+                    UI.puts "Copying framework #{target.label}, from new root #{root_path} to #{target_folder}".magenta
                     Prebuild::Passer.target_names_to_skip_integration_framework << target.name
                     FileUtils.cp_r(root_path, target_folder, :remove_destination => true)
                     next
                 end
-
+                
+                UI.puts "Copying framework #{target.label}, with base name #{target.product_basename} from #{root_path} directory #{target_folder.to_s}".magenta
                 target.spec_consumers.each do |consumer|
                     file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
                     lib_paths = file_accessor.vendored_frameworks || []
@@ -250,10 +254,10 @@ module Pod
             useless_target_names = sandbox.exsited_framework_target_names.reject do |name|
                 all_needed_names.include? name
             end
-            useless_target_names.each do |name|
-                path = sandbox.framework_folder_path_for_target_name(name)
-                path.rmtree if path.exist?
-            end
+            #useless_target_names.each do |name|
+            #    path = sandbox.framework_folder_path_for_target_name(name)
+            #    path.rmtree if path.exist?
+            #end
             
             # Issue for pods that are used as development pods
             all_needed_names.each do |name|
