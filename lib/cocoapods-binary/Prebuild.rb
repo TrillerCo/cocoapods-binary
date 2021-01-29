@@ -217,17 +217,20 @@ module Pod
                 # If target shouldn't build, we copy all the original files
                 # This is for target with only .a and .h files
                 if not target.should_build?
-                    root_path = self.sandbox.pod_dir(target.product_basename)
-                    target_folder = sandbox.generate_framework_path
-                    target_folder.mkpath unless target_folder.exist?
+                    ### Sometimes multiple targets using different subspecs give dirrect modules
+                    if !root_path.exist? && target.name != target.product_basename
+                        root_path = self.sandbox.pod_dir(target.product_basename)
+                        target_folder = sandbox.generate_framework_path
+                    end
+                    #target_folder.mkpath unless target_folder.exist?
                     
-                    UI.puts "Copying framework #{target.label}, from new root #{root_path} to #{target_folder}".magenta
+                    UI.puts "Copying vendored framework #{target.label},\n   from: #{root_path}\n   to: #{target_folder}\n".yellow
                     Prebuild::Passer.target_names_to_skip_integration_framework << target.name
                     FileUtils.cp_r(root_path, target_folder, :remove_destination => true)
                     next
                 end
                 
-                UI.puts "Copying framework #{target.label}, with base name #{target.product_basename} from #{root_path} directory #{target_folder.to_s}".magenta
+                UI.puts "Copying framework #{target.label},\n   from: #{root_path}\n   to #{target_folder}\n".yellow
                 target.spec_consumers.each do |consumer|
                     file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
                     lib_paths = file_accessor.vendored_frameworks || []
