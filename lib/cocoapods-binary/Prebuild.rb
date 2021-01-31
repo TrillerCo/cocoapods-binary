@@ -51,16 +51,6 @@ module Pod
                 not exsited_framework_pod_names.include?(pod_name)
             end
             
-            UI.puts "".magenta
-            UI.puts "Frameworks summary:".magenta
-            UI.puts "".magenta
-            UI.puts "Added: #{added}".cyan
-            UI.puts "Changed: #{changed}".cyan
-            UI.puts "Unchanged: #{unchanged}".cyan
-            UI.puts "Deleted: #{deleted}".cyan
-            UI.puts "Missing: #{missing}".cyan
-            UI.puts "".magenta
-            
             needed = (added + changed + deleted + missing)
             return needed.empty?
         end
@@ -91,6 +81,7 @@ module Pod
                 changed = changes.changed 
                 unchanged = changes.unchanged
                 deleted = changes.deleted
+                updates = []
                 
                 existed_framework_folder.mkdir unless existed_framework_folder.exist?
                 exsited_framework_pod_names = sandbox.exsited_framework_pod_names
@@ -100,8 +91,29 @@ module Pod
                     not exsited_framework_pod_names.include?(pod_name)
                 end
                 
-                root_names_to_update = (added + changed + missing)
-
+                UI.puts "".magenta
+                UI.puts "Frameworks summary:".magenta
+                UI.puts "".magenta
+                UI.puts "Added: #{added.count > 0 ? added.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                UI.puts "Changed: #{changed.count > 0 ? changed.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                UI.puts "Deleted: #{deleted.count > 0 ? deleted.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                UI.puts "Missing: #{missing.count > 0 ? missing.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                UI.puts "Unchanged: #{unchanged.count > 0 ? unchanged.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                if update
+                    updates = update[:pods]
+                    UI.puts "Updates: #{updates.count > 0 ? updates.map { |i| "\n  ‣ " + i.to_s + "" }.join("") : 0}".cyan
+                    
+                    ### If updates are venodred frameworks only they'll skip the installation phase
+                    ### Clear the GeneratedFrameworks path so the correct files are copied over
+                    updates.each do |name|
+                        update_framework_path = Pathname.new(sandbox.framework_folder_path_for_target_name(name))
+                        update_framework_path.rmtree if update_framework_path.exist?
+                    end
+                end
+                UI.puts "".magenta
+                
+                root_names_to_update = (added + changed + missing + updates)
+                
                 # transform names to targets
                 cache = []
                 targets = root_names_to_update.map do |pod_name|

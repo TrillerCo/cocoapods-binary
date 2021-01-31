@@ -98,7 +98,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     require_relative 'helper/prebuild_sandbox'
     require_relative 'Prebuild'
     
-    Pod::UI.puts "🚀  Prebuild frameworks"
+    Pod::UI.puts "Prebuild frameworks"
     
     # Fetch original installer (which is running this pre-install hook) options,
     # then pass them to our installer to perform update if needed
@@ -152,7 +152,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     # -- step 2: pod install ---
     # install
     Pod::UI.puts "\n"
-    Pod::UI.puts "🤖  Pod Install"
+    Pod::UI.puts "Pod Install"
     require_relative 'Integration'
     # go on the normal install step ...
 end
