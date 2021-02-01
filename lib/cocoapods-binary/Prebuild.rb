@@ -138,12 +138,14 @@ module Pod
             Pod::UI.puts "Prebuild frameworks (total #{targets.count})".yellow
             Pod::Prebuild.remove_build_dir(sandbox_path)
             targets.each do |target|
+                output_path = sandbox.framework_folder_path_for_target_name(target.name)
+                
                 if !target.should_build?
+                    FileUtils.rm_rf(output_path)
                     UI.puts "Skipping #{target.label}. Nothing to build.".green
                     next
                 end
                 
-                output_path = sandbox.framework_folder_path_for_target_name(target.name)
                 output_path.mkpath unless output_path.exist?
                 Pod::Prebuild.build(sandbox_path, target, output_path, bitcode_enabled,  Podfile::DSL.custom_build_options,  Podfile::DSL.custom_build_options_simulator)
 
