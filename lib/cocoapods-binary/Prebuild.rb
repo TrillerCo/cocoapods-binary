@@ -139,6 +139,8 @@ module Pod
             Pod::Prebuild.remove_build_dir(sandbox_path)
             targets.each do |target|
                 output_path = sandbox.framework_folder_path_for_target_name(target.name)
+                standard_path = Pathname.new(sandbox.standard_sanbox_path).realpath + target.name
+                FileUtils.rm_rf(standard_path)
                 
                 if !target.should_build?
                     FileUtils.rm_rf(output_path)
@@ -193,6 +195,7 @@ module Pod
                         elsif !object.real_file_path.exist? && object.real_file_path.extname == '.bundle' && Pathname.new(object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")).exist?
                             object.real_file_path = object.target_file_path.gsub("Pods/", "Pods/_Prebuild/")
                         end
+                        
                         object
                     end
                     Prebuild::Passer.resources_to_copy_for_static_framework[target.name] = path_objects
@@ -244,7 +247,6 @@ module Pod
                     next
                 end
                 
-                UI.puts "Copying framework #{target.label},\n   from: #{root_path}\n   to #{target_folder}\n".yellow
                 target.spec_consumers.each do |consumer|
                     file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
                     lib_paths = file_accessor.vendored_frameworks || []
