@@ -131,10 +131,10 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     lockfile = installer_context.lockfile
     binary_installer = Pod::Installer.new(prebuild_sandbox, prebuild_podfile, lockfile)
     
+    binary_installer.update = update
     if binary_installer.have_exact_prebuild_cache? && !update
         binary_installer.install_when_cache_hit!
     else
-        binary_installer.update = update
         binary_installer.repo_update = repo_update
         binary_installer.install!
     end
@@ -155,5 +155,15 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     Pod::UI.puts "Pod Install"
     require_relative 'Integration'
     # go on the normal install step ...
+end
+
+
+Pod::HooksManager.register('cocoapods-binary', :post_install) do |installer_context|
+    
+    # Copying Manifest.lock from Pods to _Prebuilds for the Analyzer
+    if Dir.exists?('Pods/_Prebuild') && File.exists?('Pods/Manifest.lock')
+        Pod::UI.puts "Copying Manifest.lock to Prebuild folder".green
+        FileUtils.cp_r('Pods/Manifest.lock', 'Pods/_Prebuild/Manifest.lock', :remove_destination => true)
+    end
 end
 

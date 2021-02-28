@@ -23,11 +23,19 @@ module Pod
         # @return [Analyzer::SpecsState]
         def prebuild_pods_changes
             return nil if local_manifest.nil?
+            #if @prebuild_pods_changes.nil?
+            #    changes = local_manifest.detect_changes_with_podfile(podfile)
+            #    @prebuild_pods_changes = Analyzer::SpecsState.new(changes)
+            #    # save the chagnes info for later stage
+            #    Pod::Prebuild::Passer.prebuild_pods_changes = @prebuild_pods_changes
+            #end
+            
             if @prebuild_pods_changes.nil?
-                changes = local_manifest.detect_changes_with_podfile(podfile)
-                @prebuild_pods_changes = Analyzer::SpecsState.new(changes)
+                sandbox_analyzer = Analyzer.new(sandbox, podfile, lockfile)
+                sandbox_analysis = sandbox_analyzer.analyze
+                @prebuild_pods_changes = sandbox_analysis.sandbox_state
                 # save the chagnes info for later stage
-                Pod::Prebuild::Passer.prebuild_pods_changes = @prebuild_pods_changes 
+                Pod::Prebuild::Passer.prebuild_pods_changes = @prebuild_pods_changes
             end
             @prebuild_pods_changes
         end
