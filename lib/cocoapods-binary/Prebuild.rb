@@ -31,7 +31,11 @@ module Pod
             #end
             
             if @prebuild_pods_changes.nil?
+                
                 sandbox_analyzer = Analyzer.new(sandbox, podfile, lockfile)
+                if repo_update
+                    sandbox_analyzer.sources_manager.update
+                end
                 sandbox_analysis = sandbox_analyzer.analyze
                 @prebuild_pods_changes = sandbox_analysis.sandbox_state
                 # save the chagnes info for later stage
