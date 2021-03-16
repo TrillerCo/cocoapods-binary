@@ -77,7 +77,9 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
 
     # Before everything copy Pod dir into _Prebuild because the manifest files will be the same
     Pod::UI.puts "Preparing Sandbox".magenta
-    puts %x{rsync -av 'Pods/' 'Pods/_Prebuild'}
+    if !Dir.exists?('Pods/_Prebuild') || Dir['Pods/_Prebuild/*'].empty?
+        puts %x{rsync -av 'Pods/' 'Pods/_Prebuild'}
+    end
     FileUtils.rm_rf('Pods/_Prebuild/_Prebuild')
     
     require_relative 'helper/feature_switches'
