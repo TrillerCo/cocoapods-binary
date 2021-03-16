@@ -75,6 +75,11 @@ end
 
 Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_context|
 
+    # Before everything copy Pod dir into _Prebuild because the manifest files will be the same
+    Pod::UI.puts "Preparing Sandbox".magenta
+    puts %x{rsync -av 'Pods/' 'Pods/_Prebuild'}
+    FileUtils.rm_rf('Pods/_Prebuild/_Prebuild')
+    
     require_relative 'helper/feature_switches'
     if Pod.is_prebuild_stage
         next
@@ -158,13 +163,11 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     # go on the normal install step ...
 end
 
-
 Pod::HooksManager.register('cocoapods-binary', :post_install) do |installer_context|
     
-    # Copying Manifest.lock from Pods to _Prebuilds for the Analyzer
-    if Dir.exists?('Pods/_Prebuild') && File.exists?('Pods/Manifest.lock')
-        Pod::UI.puts "Copying Manifest.lock to Prebuild folder".green
-        FileUtils.cp_r('Pods/Manifest.lock', 'Pods/_Prebuild/Manifest.lock', :remove_destination => true)
+    # Copying GeneratedFolders to the Pods directory
+    # It's copied into the _Prebuild directory during setup, in case a dev needs to run bundle exec pod install
+    if Dir.exists?('Pods/_Prebuild/GeneratedFrameworks')
+        puts %x{rsync -av 'Pods/_Prebuild/GeneratedFrameworks/' 'Pods/GeneratedFrameworks'}
     end
 end
-
